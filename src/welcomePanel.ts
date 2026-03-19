@@ -126,36 +126,15 @@ export class WelcomePanel {
         return `<span class="codicon codicon-${codicon}"></span>`;
     }
 
-    private getHtml(): string {
-        const data = this.storage.getData();
-        const codiconCssUri = this.panel.webview.asWebviewUri(
-            vscode.Uri.joinPath(this.extensionUri, 'resources', 'codicon.css'),
-        );
-        const codiconFontUri = this.panel.webview.asWebviewUri(
-            vscode.Uri.joinPath(this.extensionUri, 'resources', 'codicon.ttf'),
-        );
-
-        let projectsHtml = '';
-
-        for (const id of data.rootOrder) {
+    private renderChildren(childIds: string[], depth: number = 0): string {
+        let html = '';
+        for (const id of childIds) {
             const group = this.storage.getGroup(id);
             if (group) {
                 const groupIconHtml = this.getIconHtml(group.iconPath);
-                let childrenHtml = '';
-                for (const childId of group.children) {
-                    const project = this.storage.getProject(childId);
-                    if (project) {
-                        const iconHtml = this.getIconHtml(project.iconPath);
-                        childrenHtml += `
-                            <button class="project-item" data-path="${this.escapeAttr(project.folderPath)}" title="${this.escapeAttr(project.folderPath)}">
-                                ${iconHtml}
-                                <span class="project-name">${this.escapeHtml(project.name)}</span>
-                                <span class="project-path">${this.escapeHtml(this.shortenPath(project.folderPath))}</span>
-                            </button>`;
-                    }
-                }
-                projectsHtml += `
-                    <div class="group">
+                const childrenHtml = this.renderChildren(group.children, depth + 1);
+                html += `
+                    <div class="group" style="margin-left: ${depth > 0 ? 16 : 0}px">
                         <div class="group-header">
                             ${groupIconHtml}
                             <span class="group-name">${this.escapeHtml(group.name)}</span>
@@ -167,8 +146,8 @@ export class WelcomePanel {
                 const project = this.storage.getProject(id);
                 if (project) {
                     const iconHtml = this.getIconHtml(project.iconPath);
-                    projectsHtml += `
-                        <button class="project-item root-project" data-path="${this.escapeAttr(project.folderPath)}" title="${this.escapeAttr(project.folderPath)}">
+                    html += `
+                        <button class="project-item${depth === 0 ? ' root-project' : ''}" data-path="${this.escapeAttr(project.folderPath)}" title="${this.escapeAttr(project.folderPath)}">
                             ${iconHtml}
                             <span class="project-name">${this.escapeHtml(project.name)}</span>
                             <span class="project-path">${this.escapeHtml(this.shortenPath(project.folderPath))}</span>
@@ -176,6 +155,19 @@ export class WelcomePanel {
                 }
             }
         }
+        return html;
+    }
+
+    private getHtml(): string {
+        const data = this.storage.getData();
+        const codiconCssUri = this.panel.webview.asWebviewUri(
+            vscode.Uri.joinPath(this.extensionUri, 'resources', 'codicon.css'),
+        );
+        const codiconFontUri = this.panel.webview.asWebviewUri(
+            vscode.Uri.joinPath(this.extensionUri, 'resources', 'codicon.ttf'),
+        );
+
+        let projectsHtml = this.renderChildren(data.rootOrder);
 
         if (!projectsHtml) {
             projectsHtml = `

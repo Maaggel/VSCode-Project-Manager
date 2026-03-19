@@ -2,7 +2,7 @@
   "name": "project-manager",
   "displayName": "Project Manager",
   "description": "Manage and quickly switch between your projects with groups and custom icons",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "mikkelbundgaard",
   "repository": {
     "type": "git",
@@ -68,6 +68,12 @@
         "category": "Project Manager"
       },
       {
+        "command": "projectManager.addGroupToGroup",
+        "title": "Add Subgroup",
+        "icon": "$(group-by-ref-type)",
+        "category": "Project Manager"
+      },
+      {
         "command": "projectManager.editItem",
         "title": "Edit",
         "icon": "$(edit)",
@@ -130,14 +136,19 @@
           "group": "inline@0"
         },
         {
+          "command": "projectManager.addGroupToGroup",
+          "when": "view == projectManagerView && viewItem == group",
+          "group": "inline@1"
+        },
+        {
           "command": "projectManager.editItem",
           "when": "view == projectManagerView",
-          "group": "inline@1"
+          "group": "inline@2"
         },
         {
           "command": "projectManager.removeItem",
           "when": "view == projectManagerView",
-          "group": "inline@2"
+          "group": "inline@3"
         }
       ]
     },

@@ -88,9 +88,18 @@ export class Storage {
         await this.save();
     }
 
-    async addGroup(group: Group): Promise<void> {
+    async addGroup(group: Group, parentGroupId?: string): Promise<void> {
         this.data.groups.push(group);
-        this.data.rootOrder.push(group.id);
+        if (parentGroupId) {
+            const parent = this.getGroup(parentGroupId);
+            if (parent) {
+                parent.children.push(group.id);
+            } else {
+                this.data.rootOrder.push(group.id);
+            }
+        } else {
+            this.data.rootOrder.push(group.id);
+        }
         await this.save();
     }
 
@@ -113,9 +122,12 @@ export class Storage {
     async removeItem(id: string): Promise<void> {
         const group = this.getGroup(id);
         if (group) {
-            // Move group's children to root at the group's position
-            const groupIndex = this.data.rootOrder.indexOf(id);
-            this.data.rootOrder.splice(groupIndex, 1, ...group.children);
+            // Find the parent list (rootOrder or a parent group's children)
+            const parentGroup = this.findParentGroup(id);
+            const parentList = parentGroup ? parentGroup.children : this.data.rootOrder;
+            const idx = parentList.indexOf(id);
+            // Move group's children to the parent at the group's position
+            parentList.splice(idx, 1, ...group.children);
             this.data.groups = this.data.groups.filter(g => g.id !== id);
         } else {
             // Remove project
@@ -174,8 +186,19 @@ export class Storage {
         await this.save();
     }
 
-    findParentGroup(projectId: string): Group | undefined {
-        return this.data.groups.find(g => g.children.includes(projectId));
+    findParentGroup(itemId: string): Group | undefined {
+        return this.data.groups.find(g => g.children.includes(itemId));
+    }
+
+    /** Check if `ancestorId` is an ancestor of (or equal to) `groupId` */
+    isAncestorOf(ancestorId: string, groupId: string): boolean {
+        if (ancestorId === groupId) { return true; }
+        const group = this.getGroup(ancestorId);
+        if (!group) { return false; }
+        for (const childId of group.children) {
+            if (this.isAncestorOf(childId, groupId)) { return true; }
+        }
+        return false;
     }
 
     isEmpty(): boolean {

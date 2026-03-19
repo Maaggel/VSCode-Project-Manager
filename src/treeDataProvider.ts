@@ -73,18 +73,19 @@ export class ProjectTreeProvider
         if (element.type === 'group') {
             const group = this.storage.getGroup(element.id);
             if (!group) { return []; }
-            return group.children.map(id => ({ id, type: 'project' as const }));
+            return group.children.map(id => {
+                const childGroup = this.storage.getGroup(id);
+                return { id, type: childGroup ? 'group' as const : 'project' as const };
+            });
         }
 
         return [];
     }
 
     getParent(element: TreeNode): TreeNode | undefined {
-        if (element.type === 'project') {
-            const parentGroup = this.storage.findParentGroup(element.id);
-            if (parentGroup) {
-                return { id: parentGroup.id, type: 'group' };
-            }
+        const parentGroup = this.storage.findParentGroup(element.id);
+        if (parentGroup) {
+            return { id: parentGroup.id, type: 'group' };
         }
         return undefined;
     }
@@ -107,9 +108,11 @@ export class ProjectTreeProvider
         const draggedItem = this.storage.getItem(draggedId);
         if (!draggedItem) { return; }
 
-        // Don't allow dropping groups into groups
+        // Don't allow dropping a group into itself or its descendants
         if (draggedItem.type === 'group' && target?.type === 'group') {
-            return;
+            if (this.storage.isAncestorOf(draggedId, target.id)) {
+                return;
+            }
         }
 
         if (!target) {
@@ -117,9 +120,7 @@ export class ProjectTreeProvider
             await this.storage.moveToGroup(draggedId, null);
         } else if (target.type === 'group') {
             // Dropped on a group - move into it
-            if (draggedItem.type === 'project') {
-                await this.storage.moveToGroup(draggedId, target.id);
-            }
+            await this.storage.moveToGroup(draggedId, target.id);
         } else if (target.type === 'project') {
             // Dropped on a project - place after it in the same parent
             await this.storage.reorder(draggedId, target.id, 'after');

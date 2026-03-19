@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Storage } from './storage';
 import { ProjectTreeProvider } from './treeDataProvider';
-import { addProject, addProjectToGroup, addGroup, editItem, removeItem, openProject, quickOpenProject, setStorageUri } from './commands';
+import { addProject, addProjectToGroup, addGroup, addGroupToGroup, editItem, removeItem, openProject, quickOpenProject, setStorageUri } from './commands';
 import { WelcomePanel } from './welcomePanel';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -38,6 +38,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             addGroup(storage, treeProvider)),
         vscode.commands.registerCommand('projectManager.addProjectToGroup', (node) =>
             addProjectToGroup(node, storage, treeProvider)),
+        vscode.commands.registerCommand('projectManager.addGroupToGroup', (node) =>
+            addGroupToGroup(node, storage, treeProvider)),
         vscode.commands.registerCommand('projectManager.editItem', (node) =>
             editItem(node, storage, treeProvider)),
         vscode.commands.registerCommand('projectManager.removeItem', (node) =>

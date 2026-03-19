@@ -18,7 +18,7 @@ interface IconQuickPickItem extends vscode.QuickPickItem {
     builtinId?: string;
 }
 
-async function pickIcon(): Promise<string | undefined> {
+async function pickIcon(projectFolder?: string): Promise<string | undefined> {
     const items: IconQuickPickItem[] = [
         {
             label: '$(close) No icon (use default)',
@@ -60,6 +60,7 @@ async function pickIcon(): Promise<string | undefined> {
             canSelectFiles: true,
             canSelectFolders: false,
             canSelectMany: false,
+            defaultUri: projectFolder ? vscode.Uri.file(projectFolder) : undefined,
             filters: {
                 'Images': ['svg', 'png', 'jpg', 'jpeg', 'gif'],
                 'Icons': ['ico'],
@@ -99,7 +100,7 @@ export async function addProject(storage: Storage, tree: ProjectTreeProvider): P
     });
     if (!name) { return; }
 
-    const iconPath = await pickIcon();
+    const iconPath = await pickIcon(folderPath);
 
     const project: Project = {
         id: crypto.randomUUID(),
@@ -138,7 +139,7 @@ export async function addProjectToGroup(
     });
     if (!name) { return; }
 
-    const iconPath = await pickIcon();
+    const iconPath = await pickIcon(folderPath);
 
     const project: Project = {
         id: crypto.randomUUID(),
@@ -152,7 +153,7 @@ export async function addProjectToGroup(
     tree.refresh();
 }
 
-export async function addGroup(storage: Storage, tree: ProjectTreeProvider): Promise<void> {
+export async function addGroup(storage: Storage, tree: ProjectTreeProvider, parentGroupId?: string): Promise<void> {
     const name = await vscode.window.showInputBox({
         prompt: 'Group name',
         validateInput: (v) => v.trim() ? null : 'Name is required',
@@ -169,8 +170,17 @@ export async function addGroup(storage: Storage, tree: ProjectTreeProvider): Pro
         children: [],
     };
 
-    await storage.addGroup(group);
+    await storage.addGroup(group, parentGroupId);
     tree.refresh();
+}
+
+export async function addGroupToGroup(
+    node: { id: string; type: 'group' },
+    storage: Storage,
+    tree: ProjectTreeProvider,
+): Promise<void> {
+    if (!node || node.type !== 'group') { return; }
+    await addGroup(storage, tree, node.id);
 }
 
 export async function editItem(
@@ -214,7 +224,7 @@ export async function editItem(
         );
         let iconPath = item.iconPath;
         if (changeIcon === 'Change icon...') {
-            iconPath = await pickIcon() ?? item.iconPath;
+            iconPath = await pickIcon(folderPath) ?? item.iconPath;
         } else if (changeIcon === 'Remove icon') {
             iconPath = undefined;
         }
@@ -284,31 +294,15 @@ interface ProjectQuickPickItem extends vscode.QuickPickItem {
     folderPath?: string;
 }
 
-export async function quickOpenProject(storage: Storage): Promise<void> {
-    const data = storage.getData();
-    const items: ProjectQuickPickItem[] = [];
-
-    // Build grouped items
-    for (const id of data.rootOrder) {
+function collectQuickPickItems(storage: Storage, childIds: string[], items: ProjectQuickPickItem[], prefix: string = ''): void {
+    for (const id of childIds) {
         const group = storage.getGroup(id);
         if (group) {
-            // Add group separator
             items.push({
-                label: group.name,
+                label: prefix ? `${prefix} / ${group.name}` : group.name,
                 kind: vscode.QuickPickItemKind.Separator,
             });
-            // Add projects in this group
-            for (const childId of group.children) {
-                const project = storage.getProject(childId);
-                if (project) {
-                    items.push({
-                        label: `$(folder) ${project.name}`,
-                        description: project.folderPath,
-                        projectId: project.id,
-                        folderPath: project.folderPath,
-                    });
-                }
-            }
+            collectQuickPickItems(storage, group.children, items, prefix ? `${prefix} / ${group.name}` : group.name);
         } else {
             const project = storage.getProject(id);
             if (project) {
@@ -321,6 +315,13 @@ export async function quickOpenProject(storage: Storage): Promise<void> {
             }
         }
     }
+}
+
+export async function quickOpenProject(storage: Storage): Promise<void> {
+    const data = storage.getData();
+    const items: ProjectQuickPickItem[] = [];
+
+    collectQuickPickItems(storage, data.rootOrder, items);
 
     if (items.length === 0) {
         const action = await vscode.window.showInformationMessage(
