@@ -1,0 +1,169 @@
+{
+  "name": "project-manager",
+  "displayName": "Project Manager",
+  "description": "Manage and quickly switch between your projects with groups and custom icons",
+  "version": "1.0.0",
+  "publisher": "mikkelbundgaard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikkelbundgaard/vscode-project-manager"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "projectManager",
+          "title": "Project Manager",
+          "icon": "resources/project-manager.svg"
+        }
+      ]
+    },
+    "views": {
+      "projectManager": [
+        {
+          "id": "projectManagerView",
+          "name": "Projects"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "projectManagerView",
+        "contents": "$(loading~spin) Loading projects...",
+        "when": "!projectManager.loaded"
+      },
+      {
+        "view": "projectManagerView",
+        "contents": "No projects yet.\n[Add Project](command:projectManager.addProject)\n[Add Group](command:projectManager.addGroup)\n\nTip: Use $(keyboard) Ctrl+Alt+P to quickly open a project from anywhere.",
+        "when": "projectManager.loaded"
+      }
+    ],
+    "commands": [
+      {
+        "command": "projectManager.addProject",
+        "title": "Add Project",
+        "icon": "$(new-folder)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.addGroup",
+        "title": "Add Group",
+        "icon": "$(group-by-ref-type)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.addProjectToGroup",
+        "title": "Add Project to Group",
+        "icon": "$(new-folder)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.editItem",
+        "title": "Edit",
+        "icon": "$(edit)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.removeItem",
+        "title": "Remove",
+        "icon": "$(trash)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.openProject",
+        "title": "Open Project",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.quickOpen",
+        "title": "Open Project...",
+        "icon": "$(folder-opened)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.manageProjects",
+        "title": "Manage Projects",
+        "icon": "$(settings-gear)",
+        "category": "Project Manager"
+      },
+      {
+        "command": "projectManager.showWelcome",
+        "title": "Show Projects Welcome",
+        "icon": "$(home)",
+        "category": "Project Manager"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "projectManager.quickOpen",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "projectManager.addProject",
+          "when": "view == projectManagerView",
+          "group": "navigation"
+        },
+        {
+          "command": "projectManager.addGroup",
+          "when": "view == projectManagerView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "projectManager.addProjectToGroup",
+          "when": "view == projectManagerView && viewItem == group",
+          "group": "inline@0"
+        },
+        {
+          "command": "projectManager.editItem",
+          "when": "view == projectManagerView",
+          "group": "inline@1"
+        },
+        {
+          "command": "projectManager.removeItem",
+          "when": "view == projectManagerView",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Project Manager",
+      "properties": {
+        "projectManager.showWelcomeOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Projects welcome panel when VS Code opens with no folder."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.82.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.45"
+  }
+}
