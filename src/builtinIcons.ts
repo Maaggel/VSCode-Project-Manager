@@ -22,7 +22,7 @@ export const BUILTIN_ICONS: BuiltinIcon[] = [
     { id: 'rocket', label: 'Rocket', codicon: 'rocket' },
     { id: 'bolt', label: 'Lightning', codicon: 'zap' },
     { id: 'heart', label: 'Heart', codicon: 'heart' },
-    { id: 'leaf', label: 'Sparkle', codicon: 'sparkle' },
+    { id: 'sparkle', label: 'Sparkle', codicon: 'sparkle' },
     { id: 'coffee', label: 'Coffee', codicon: 'coffee' },
     { id: 'terminal', label: 'Terminal', codicon: 'terminal' },
     { id: 'tools', label: 'Tools', codicon: 'tools' },
