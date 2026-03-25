@@ -4,6 +4,7 @@ A lightweight VS Code extension for organizing and quickly switching between you
 
 ## Features
 
+- **Recent Projects** — Quickly access your most recently opened projects from a dedicated section at the top of both the sidebar and welcome panel
 - **Welcome Panel** — A clean project overview opens automatically when VS Code starts with no folder, putting your projects front and center
 - **Project Groups** — Organize projects into named groups (e.g. "Work", "Personal", "Open Source")
 - **Built-in Icons** — Choose from 26 built-in icons (code, web, database, rocket, terminal, and more) to visually distinguish projects and groups
@@ -41,6 +42,8 @@ When you open VS Code without a folder, the Projects welcome panel will appear a
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `projectManager.showWelcomeOnStartup` | `true` | Show the Projects welcome panel when VS Code opens with no folder |
+| `projectManager.recentProjectsCountSidebar` | `3` | Number of recent projects to show in the sidebar (0 to hide) |
+| `projectManager.recentProjectsCountWebview` | `3` | Number of recent projects to show in the welcome panel (0 to hide) |
 
 ## Icon Picker
 

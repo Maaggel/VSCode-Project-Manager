@@ -283,8 +283,11 @@ export async function removeItem(
     tree.refresh();
 }
 
-export async function openProject(project: { folderPath: string }): Promise<void> {
+export async function openProject(project: { id?: string; folderPath: string }, storage?: Storage): Promise<void> {
     if (!project?.folderPath) { return; }
+    if (storage && project.id) {
+        await storage.recordOpen(project.id);
+    }
     const uri = vscode.Uri.file(project.folderPath);
     await vscode.commands.executeCommand('vscode.openFolder', uri, { forceNewWindow: false });
 }
@@ -340,6 +343,9 @@ export async function quickOpenProject(storage: Storage): Promise<void> {
     });
 
     if (picked?.folderPath) {
+        if (picked.projectId) {
+            await storage.recordOpen(picked.projectId);
+        }
         const uri = vscode.Uri.file(picked.folderPath);
         await vscode.commands.executeCommand('vscode.openFolder', uri, { forceNewWindow: false });
     }

@@ -4,6 +4,7 @@ export interface Project {
     name: string;
     folderPath: string;
     iconPath?: string;
+    lastOpened?: number;
 }
 
 export interface Group {

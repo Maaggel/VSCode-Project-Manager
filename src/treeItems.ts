@@ -2,6 +2,14 @@ import * as vscode from 'vscode';
 import { Project, Group } from './types';
 import { resolveIconPath } from './builtinIcons';
 
+export function createSectionTreeItem(label: string, id: string): vscode.TreeItem {
+    const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Expanded);
+    item.id = id;
+    item.contextValue = 'section';
+    item.iconPath = new vscode.ThemeIcon('history');
+    return item;
+}
+
 export function createProjectTreeItem(project: Project, extensionUri: vscode.Uri): vscode.TreeItem {
     const item = new vscode.TreeItem(project.name, vscode.TreeItemCollapsibleState.None);
     item.id = project.id;

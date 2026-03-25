@@ -2,7 +2,7 @@
   "name": "project-manager",
   "displayName": "Project Manager",
   "description": "Manage and quickly switch between your projects with groups and custom icons",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "mikkelbundgaard",
   "repository": {
     "type": "git",
@@ -142,12 +142,12 @@
         },
         {
           "command": "projectManager.editItem",
-          "when": "view == projectManagerView",
+          "when": "view == projectManagerView && viewItem =~ /^(project|group)$/",
           "group": "inline@2"
         },
         {
           "command": "projectManager.removeItem",
-          "when": "view == projectManagerView",
+          "when": "view == projectManagerView && viewItem =~ /^(project|group)$/",
           "group": "inline@3"
         }
       ]
@@ -159,6 +159,18 @@
           "type": "boolean",
           "default": true,
           "description": "Show the Projects welcome panel when VS Code opens with no folder."
+        },
+        "projectManager.recentProjectsCountSidebar": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 0,
+          "description": "Number of recent projects to show in the sidebar. Set to 0 to hide the section."
+        },
+        "projectManager.recentProjectsCountWebview": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 0,
+          "description": "Number of recent projects to show in the welcome panel. Set to 0 to hide the section."
         }
       }
     }

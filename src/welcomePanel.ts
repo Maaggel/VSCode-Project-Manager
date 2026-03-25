@@ -19,9 +19,15 @@ export class WelcomePanel {
         this.panel.webview.onDidReceiveMessage(
             async (msg) => {
                 if (msg.command === 'openProject') {
+                    if (msg.projectId) {
+                        await storage.recordOpen(msg.projectId);
+                    }
                     const uri = vscode.Uri.file(msg.folderPath);
                     await vscode.commands.executeCommand('vscode.openFolder', uri, { forceNewWindow: false });
                 } else if (msg.command === 'openProjectNewWindow') {
+                    if (msg.projectId) {
+                        await storage.recordOpen(msg.projectId);
+                    }
                     const uri = vscode.Uri.file(msg.folderPath);
                     await vscode.commands.executeCommand('vscode.openFolder', uri, { forceNewWindow: true });
                 } else if (msg.command === 'addProject') {
@@ -147,7 +153,7 @@ export class WelcomePanel {
                 if (project) {
                     const iconHtml = this.getIconHtml(project.iconPath);
                     html += `
-                        <button class="project-item${depth === 0 ? ' root-project' : ''}" data-path="${this.escapeAttr(project.folderPath)}" title="${this.escapeAttr(project.folderPath)}">
+                        <button class="project-item${depth === 0 ? ' root-project' : ''}" data-path="${this.escapeAttr(project.folderPath)}" data-id="${this.escapeAttr(project.id)}" title="${this.escapeAttr(project.folderPath)}">
                             ${iconHtml}
                             <span class="project-name">${this.escapeHtml(project.name)}</span>
                             <span class="project-path">${this.escapeHtml(this.shortenPath(project.folderPath))}</span>
@@ -156,6 +162,33 @@ export class WelcomePanel {
             }
         }
         return html;
+    }
+
+    private renderRecentProjects(): string {
+        const config = vscode.workspace.getConfiguration('projectManager');
+        const count = config.get<number>('recentProjectsCountWebview', 3);
+        const recentProjects = this.storage.getRecentProjects(count);
+        if (recentProjects.length === 0) { return ''; }
+
+        let items = '';
+        for (const project of recentProjects) {
+            const iconHtml = this.getIconHtml(project.iconPath);
+            items += `
+                <button class="project-item" data-path="${this.escapeAttr(project.folderPath)}" data-id="${this.escapeAttr(project.id)}" title="${this.escapeAttr(project.folderPath)}">
+                    ${iconHtml}
+                    <span class="project-name">${this.escapeHtml(project.name)}</span>
+                    <span class="project-path">${this.escapeHtml(this.shortenPath(project.folderPath))}</span>
+                </button>`;
+        }
+
+        return `
+            <div class="recent-section">
+                <div class="section-header">
+                    <span class="codicon codicon-history"></span>
+                    <span class="section-title">Recent Projects</span>
+                </div>
+                <div class="section-children">${items}</div>
+            </div>`;
     }
 
     private getHtml(): string {
@@ -167,6 +200,7 @@ export class WelcomePanel {
             vscode.Uri.joinPath(this.extensionUri, 'resources', 'codicon.ttf'),
         );
 
+        const recentHtml = this.renderRecentProjects();
         let projectsHtml = this.renderChildren(data.rootOrder);
 
         if (!projectsHtml) {
@@ -242,6 +276,36 @@ export class WelcomePanel {
 
         .header-btn:hover {
             background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .recent-section {
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.2));
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            margin-bottom: 4px;
+            color: var(--vscode-descriptionForeground);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-header .codicon {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .section-children {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .group {
@@ -394,6 +458,7 @@ export class WelcomePanel {
                 </button>
             </div>
         </div>
+        ${recentHtml}
         ${projectsHtml}
         <div class="shortcut-hint">
             Tip: Press <kbd>Ctrl+Alt+P</kbd> to quick-open a project from anywhere
@@ -405,10 +470,11 @@ export class WelcomePanel {
         document.querySelectorAll('.project-item').forEach(el => {
             el.addEventListener('click', (e) => {
                 const path = el.getAttribute('data-path');
+                const id = el.getAttribute('data-id');
                 if (e.ctrlKey || e.metaKey) {
-                    vscode.postMessage({ command: 'openProjectNewWindow', folderPath: path });
+                    vscode.postMessage({ command: 'openProjectNewWindow', folderPath: path, projectId: id });
                 } else {
-                    vscode.postMessage({ command: 'openProject', folderPath: path });
+                    vscode.postMessage({ command: 'openProject', folderPath: path, projectId: id });
                 }
             });
         });

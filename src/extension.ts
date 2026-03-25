@@ -21,6 +21,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         storage.startWatching(),
         storage.onDidChange(() => treeProvider.refresh()),
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('projectManager.recentProjectsCountSidebar') ||
+                e.affectsConfiguration('projectManager.recentProjectsCountWebview')) {
+                treeProvider.refresh();
+            }
+        }),
         treeView,
         treeView.onDidCollapseElement(e => {
             if (e.element.type === 'group') {
@@ -45,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand('projectManager.removeItem', (node) =>
             removeItem(node, storage, treeProvider)),
         vscode.commands.registerCommand('projectManager.openProject', (project) =>
-            openProject(project)),
+            openProject(project, storage)),
         vscode.commands.registerCommand('projectManager.quickOpen', () =>
             quickOpenProject(storage)),
         vscode.commands.registerCommand('projectManager.manageProjects', () =>

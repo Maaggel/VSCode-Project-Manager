@@ -201,6 +201,22 @@ export class Storage {
         return false;
     }
 
+    async recordOpen(id: string): Promise<void> {
+        const project = this.getProject(id);
+        if (project) {
+            project.lastOpened = Date.now();
+            await this.save();
+        }
+    }
+
+    getRecentProjects(count: number): Project[] {
+        if (count <= 0) { return []; }
+        return this.data.projects
+            .filter(p => p.lastOpened !== undefined)
+            .sort((a, b) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0))
+            .slice(0, count);
+    }
+
     isEmpty(): boolean {
         return this.data.projects.length === 0 && this.data.groups.length === 0;
     }
